@@ -48,10 +48,13 @@ class SearchExpression {
     PMGD::StringID _tag;
 
     /// Opaque definition of a node iterator
-    class SearchExpressionIterator;
+    class NodeAndIteratorImpl;
+    class NodeOrIteratorImpl;
 
     /// Opaque definition of an edge iterator
-    class EdgeSearchExpressionIterator;
+    class EdgeAndIteratorImpl;
+
+    bool _or;
 
     /// The conjunctions of property predicates
     std::vector<PMGD::PropertyPredicate> _predicates;
@@ -61,14 +64,17 @@ class SearchExpression {
 
 public:
     /// Construction requires a handle to a database
-    SearchExpression(PMGD::Graph &db, PMGD::StringID tag) : _db(db), _tag(tag) {}
+    SearchExpression(PMGD::Graph &db, PMGD::StringID tag, bool p_or) :
+        _db(db), _tag(tag), _or(p_or) {}
 
     void add(PMGD::PropertyPredicate pp) { _predicates.push_back(pp); }
     const PMGD::StringID tag() const { return _tag; };
 
     PMGD::NodeIterator eval_nodes();
-    PMGD::NodeIterator eval_nodes(const PMGD::Node &node, PMGD::Direction dir = PMGD::Any,
-                                       PMGD::StringID edgetag = 0, bool unique = true);
+    PMGD::NodeIterator eval_nodes(const PMGD::Node &node,
+                                  PMGD::Direction dir = PMGD::Any,
+                                  PMGD::StringID edgetag = 0,
+                                  bool unique = true);
 
     PMGD::EdgeIterator eval_edges();
 };
