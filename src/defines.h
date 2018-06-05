@@ -65,6 +65,7 @@
 #define VDMS_DESC_TAG             "VD:DESC"
 #define VDMS_DESC_EDGE_TAG        "VD:DESCLINK"
 #define VDMS_DESC_LABEL_PROP      "VD:label"
+#define VDMS_DESC_ID_PROP         "VD:descId"
 
 #define VDMS_DESC_LABEL_TAG       "VD:DESCLABEL"
 #define VDMS_DESC_LABEL_NAME_PROP "VD:labelName"

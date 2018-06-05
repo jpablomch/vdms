@@ -66,6 +66,7 @@ void QueryHandler::init()
     _rs_cmds["AddDescriptorSet"]   = new AddDescriptorSet();
     _rs_cmds["AddDescriptor"]      = new AddDescriptor();
     _rs_cmds["ClassifyDescriptor"] = new ClassifyDescriptor();
+    _rs_cmds["FindDescriptor"]     = new FindDescriptor();
 
     // Load the string containing the schema (api_schema/APISchema.h)
     Json::Reader reader;
@@ -105,6 +106,8 @@ QueryHandler::QueryHandler()
                             ->set_pmgd_qh(&_pmgd_qh);
     ((DescriptorsCommand*)_rs_cmds["ClassifyDescriptor"])
                             ->set_pmgd_qh(&_pmgd_qh);
+    ((DescriptorsCommand*)_rs_cmds["FindDescriptor"])
+                            ->set_pmgd_qh(&_pmgd_qh);
 }
 
 void QueryHandler::process_connection(comm::Connection *c)
@@ -141,8 +144,7 @@ bool QueryHandler::syntax_checker(const Json::Value& root, Json::Value& error)
     valijson::adapters::JsonCppAdapter user_query(root);
     if (!_validator.validate(*_schema, user_query, &results)) {
         std::cerr << "API validation failed for:" << std::endl;
-        Json::StyledWriter swriter;
-        std::cerr << swriter.write(root) << std::endl;
+        std::cerr << root.toStyledString() << std::endl;
 
         // Will attempt to find the simple error
         // To avoid valijson dump
@@ -212,8 +214,9 @@ int QueryHandler::parse_commands(const protobufs::queryMessage& proto_query,
             assert(query.getMemberNames().size() == 1);
             std::string cmd = query.getMemberNames()[0];
 
-            if (_rs_cmds[cmd]->need_blob(query))
+            if (_rs_cmds[cmd]->need_blob(query)) {
                 blob_counter++;
+            }
         }
 
         if (blob_counter != proto_query.blobs().size()) {
@@ -266,6 +269,7 @@ void QueryHandler::process_query(protobufs::queryMessage& proto_query,
         Json::Value cmd_result;
         Json::Value cmd_current;
         std::vector<std::string> images_log;
+        std::vector<Json::Value> construct_results;
 
         auto error = [&](Json::Value& res, Json::Value& failed_command)
         {
@@ -307,15 +311,20 @@ void QueryHandler::process_query(protobufs::queryMessage& proto_query,
                 images_log.push_back(cmd_result["image_added"].asString());
             }
 
+            construct_results.push_back(cmd_result);
+
             if (ret_code != 0) {
                 error(cmd_result, root[j]);
                 return;
             }
+
+            construct_results.push_back(cmd_result);
         }
 
         Json::Value& tx_responses = pmgd_query.run();
 
         if (tx_responses.size() != root.size()) { // error
+
             cmd_current = "Transaction";
             cmd_result = tx_responses;
             cmd_result["info"] = "Failed PMGDTransaction";
@@ -328,7 +337,7 @@ void QueryHandler::process_query(protobufs::queryMessage& proto_query,
         else {
             blob_count = 0;
             for (int j = 0; j < root.size(); j++) {
-                const Json::Value& query = root[j];
+                Json::Value& query = root[j];
                 std::string cmd = query.getMemberNames()[0];
 
                 RSCommand* rscmd = _rs_cmds[cmd];
@@ -336,9 +345,10 @@ void QueryHandler::process_query(protobufs::queryMessage& proto_query,
                 const std::string& blob = rscmd->need_blob(query) ?
                                           proto_query.blobs(blob_count++) : "";
 
+                query["cp_result"] = construct_results[j];
                 cmd_result = rscmd->construct_responses(
                                         tx_responses[j],
-                                        root[j], proto_res, blob);
+                                        query, proto_res, blob);
 
                 // This is for error handling
                 if (cmd_result.isMember("status")) {

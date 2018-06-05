@@ -18,7 +18,7 @@ def buildServer(env):
               os.path.join(env['INTEL_PATH'], 'vcl/src'),
              ],
     LIBS = [ 'pmgd', 'pmgd-util',
-             'jsoncpp', 'protobuf',
+             'jsoncpp', 'protobuf', 'tbb',
              'vdms-utils', 'vcl', 'pthread',
            ],
     LIBPATH = ['/usr/local/lib/', 'utils/',

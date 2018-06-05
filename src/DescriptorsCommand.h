@@ -40,8 +40,11 @@
 
 #include "QueryHandler.h" // to provide the database connection
 #include "DescriptorsManager.h"
+#include "tbb/concurrent_unordered_map.h"
 
 namespace VDMS{
+
+    typedef std::pair<std::vector<long>, std::vector<float>> IDDistancePair;
 
     // This class encapsulates common behavior of Descriptors-related cmds.
     class DescriptorsCommand : public RSCommand
@@ -50,15 +53,19 @@ namespace VDMS{
         DescriptorsManager* _dm;
         PMGDQueryHandler* _pmgd_qh; // This needs to make read-transcations.
 
+        tbb::concurrent_unordered_map<long, IDDistancePair> _cache_map;
+
         // Will return the path to the set and the dimensions
         std::string check_set(const std::string& set, int& dim);
+
+        bool check_blob_size(const std::string& blob, const int dimensions,
+                             const long n_desc);
 
     public:
         DescriptorsCommand(const std::string& cmd_name);
 
         void set_pmgd_qh(PMGDQueryHandler* pmgd_qh)
         {
-          // TODO: this is for the time being.
           _pmgd_qh = pmgd_qh;
         }
 
@@ -100,7 +107,7 @@ namespace VDMS{
 
     class AddDescriptor: public DescriptorsCommand
     {
-        int insert_descriptor(const std::string& blob,
+        long insert_descriptor(const std::string& blob,
                                const std::string& path,
                                int dim,
                                const std::string& label,
@@ -137,6 +144,31 @@ namespace VDMS{
                                Json::Value& error);
 
         bool need_blob(const Json::Value& cmd) { return true; }
+
+        Json::Value construct_responses(
+                Json::Value& json_responses,
+                const Json::Value &json,
+                protobufs::queryMessage &response,
+                const std::string &blob);
+
+    };
+
+    class FindDescriptor: public DescriptorsCommand
+    {
+
+    private:
+      void convert_properties(Json::Value& entities);
+
+    public:
+        FindDescriptor();
+
+        int construct_protobuf(PMGDQuery& tx,
+                               const Json::Value& root,
+                               const std::string& blob,
+                               int grp_id,
+                               Json::Value& error);
+
+        bool need_blob(const Json::Value& cmd);
 
         Json::Value construct_responses(
                 Json::Value& json_responses,

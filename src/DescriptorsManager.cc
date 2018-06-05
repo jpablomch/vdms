@@ -69,7 +69,6 @@ VCL::DescriptorSet* DescriptorsManager::get_descriptors_handler(
     std::string path)
 {
     VCL::DescriptorSet* desc_ptr;
-    _lock.lock();
 
     auto element = _descriptors_handlers.find(path);
 
@@ -80,8 +79,6 @@ VCL::DescriptorSet* DescriptorsManager::get_descriptors_handler(
     else {
         desc_ptr = element->second;
     }
-
-    _lock.unlock();
 
     return desc_ptr;
 }

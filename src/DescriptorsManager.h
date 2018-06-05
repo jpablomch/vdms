@@ -35,17 +35,15 @@
 #include <queue>
 
 #include "VCL.h"
+#include "tbb/concurrent_unordered_map.h"
 
 namespace VDMS {
 
     class DescriptorsManager
     {
         static DescriptorsManager* _dm;
-        std::map<std::string, VCL::DescriptorSet* > _descriptors_handlers;
-
-        // Need this lock till we have concurrency support in JL
-        // TODO: Make this reader writer.
-        std::mutex _lock;
+        tbb::concurrent_unordered_map <std::string, VCL::DescriptorSet* >
+            _descriptors_handlers;
 
         DescriptorsManager();
 
