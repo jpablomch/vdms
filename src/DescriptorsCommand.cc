@@ -44,7 +44,12 @@ DescriptorsCommand::DescriptorsCommand(const std::string& cmd_name) :
     _dm = DescriptorsManager::instance();
 }
 
-std::string DescriptorsCommand::check_set(const std::string& set_name, int& dim)
+// This function only throws when there is a transaction error,
+// but not when there is an input error (such as wrong set_name).
+// In case of wrong input, we need to inform to the user what
+// went wrong.
+std::string DescriptorsCommand::get_set_path(const std::string& set_name,
+                                             int& dim)
 {
     // Will issue a read-only transaction to check
     // if the Set exists
@@ -125,6 +130,7 @@ int AddDescriptorSet::construct_protobuf(
     props[VDMS_DESC_SET_NAME_PROP] = cmd["name"].asString();
     props[VDMS_DESC_SET_DIM_PROP]  = cmd["dimensions"].asInt();
     props[VDMS_DESC_SET_PATH_PROP] = desc_set_path;
+
     Json::Value constraints;
     constraints[VDMS_DESC_SET_NAME_PROP].append("==");
     constraints[VDMS_DESC_SET_NAME_PROP].append(cmd["name"].asString());
@@ -163,12 +169,29 @@ Json::Value AddDescriptorSet::construct_responses(
     std::string set_name = cmd["name"].asString();
     std::string desc_set_path = _storage_sets + "/" + set_name;
 
+    std::string metric_str = get_value<std::string>(cmd, "metric", "L2");
+    VCL::DistanceMetric metric = metric_str == "L2"? VCL::L2 : VCL::IP;
+
+    std::string eng_str = get_value<std::string>(cmd, "engine", "FaissFlat");
+    VCL::DescriptorSetEngine eng;
+
+    if (eng_str == "FaissFlat")
+        eng = VCL::FaissFlat;
+    else if (eng_str == "FaissIVFFlat")
+        eng = VCL::FaissIVFFlat;
+    else if (eng_str == "TileDBDense")
+        eng = VCL::TileDBDense;
+    else if (eng_str == "TileDBSparse")
+        eng = VCL::TileDBSparse;
+    else
+        throw ExceptionCommand(DescriptorSetError, "Engine not supported");
+
     // This can be a problem. If this fails, we will have a node in pmgd
     // linking to this broken directory. We can probably set up a mechanism
-    // to fix a broken link when detected later.
+    // to fix a broken link when detected later, same with images.
     // For now, we use the defaul faiss index.
     try {
-        VCL::DescriptorSet desc_set(desc_set_path, dimensions);
+        VCL::DescriptorSet desc_set(desc_set_path, dimensions, eng, metric);
         desc_set.store();
     }
     catch (VCL::Exception e) {
@@ -250,7 +273,7 @@ int AddDescriptor::construct_protobuf(
     }
 
     int dimensions;
-    std::string set_path = check_set(set_name, dimensions);
+    std::string set_path = get_set_path(set_name, dimensions);
 
     if (set_path.empty()) {
         error["info"] = "Set " + set_name + " not found";
@@ -334,15 +357,46 @@ int ClassifyDescriptor::construct_protobuf(
 
     const std::string set_name = cmd["set"].asString();
 
-    // This control goes away.
     int dimensions;
-    const std::string set_path = check_set(set_name, dimensions);
+    const std::string set_path = get_set_path(set_name, dimensions);
+
     if (set_path.empty()) {
-        // todo throw
-        // set the error json struct
-        std::cerr << "Set non-existent: " << set_name << std::endl;
+        error["status"] = RSCommand::Error;
+        error["info"]   = "DescritorSet Not Found!";
         return -1;
     }
+
+    // TODO REVISIT THIS COMMAND COMPLETELY, NOT SURE WHAT IT IS DOING.
+    // try {
+    //     VCL::DescriptorSet* set = _dm->get_descriptors_handler(set_path);
+
+    //     auto class_res = set->classify((float*)blob.data(), 1);
+
+    //     long returned_counter = 0;
+    //     std::string blob_return;
+
+    //     Json::Value ids_array;
+    //     for (auto& id : class_res) {
+    //         if (id >= 0) {
+    //             ids_array.append(Json::Int64(id));
+    //         }
+    //     }
+
+    //     Json::Value node_constraints = cmd["constraints"];
+    //     node_constraints[VDMS_DESC_ID_PROP].append("==");
+    //     node_constraints[VDMS_DESC_ID_PROP].append(ids_array);
+
+    //     query.QueryNode(
+    //         get_value<int>(cmd, "_ref", -1),
+    //         VDMS_DESC_TAG,
+    //         link_to_set, node_constraints, results, false);
+
+    // } catch (VCL::Exception e) {
+    //     print_exception(e);
+    //     error["status"] = RSCommand::Error;
+    //     error["info"]   = "VCL Exception";
+    //     return -1;
+    // }
 
     Json::Value link;
     Json::Value results;
@@ -410,10 +464,6 @@ Json::Value ClassifyDescriptor::construct_responses(
 
                 auto labels = set->classify((float*)blob.data(), 1);
 
-                // for (auto l : labels) {
-                //     std::cerr << "Label: " << l << std::endl;
-                // }
-
                 if (labels.size() == 0) {
                     classifyDesc["info"]   = "No labels, cannot classify";
                     classifyDesc["status"] = RSCommand::Error;
@@ -465,17 +515,14 @@ int FindDescriptor::construct_protobuf(
 
     const std::string set_name = cmd["set"].asString();
 
-
     int dimensions;
-    const std::string set_path = check_set(set_name, dimensions);
+    const std::string set_path = get_set_path(set_name, dimensions);
 
     if (set_path.empty()) {
-        // todo throw
-        // set the error json struct
-        std::cerr << "Set non-existent: " << set_name << std::endl;
+        cp_result["status"] = RSCommand::Error;
+        cp_result["info"]   = "DescritorSet Not Found!";
         return -1;
     }
-
 
     Json::Value results_set;
     Json::Value list_arr_set;
@@ -629,7 +676,7 @@ int FindDescriptor::construct_protobuf(
             node_constraints[VDMS_DESC_ID_PROP].append(ids_array);
 
             query.QueryNode(
-                -1,
+                get_value<int>(cmd, "_ref", -1),
                 VDMS_DESC_TAG,
                 link_to_set, node_constraints, results, false);
 
@@ -811,8 +858,9 @@ Json::Value FindDescriptor::construct_responses(
 
             Json::Value desc_data;
 
+            long d_id = (*ids)[i];
             for (auto ent : entities) {
-                if (ent["_id"].asInt64() == (*ids)[i]) {
+                if (ent["_id"].asInt64() == d_id) {
                     desc_data = ent;
                     break;
                 }
@@ -841,7 +889,7 @@ Json::Value FindDescriptor::construct_responses(
                     desc_blob->resize(sizeof(float) * dim);
 
                     set->get_descriptors(&(*ids)[i], 1,
-                                         (float*) (*desc_blob).data());
+                                         (float*)(*desc_blob).data());
 
                 } catch (VCL::Exception e) {
                     print_exception(e);

@@ -56,7 +56,7 @@ namespace VDMS{
         tbb::concurrent_unordered_map<long, IDDistancePair> _cache_map;
 
         // Will return the path to the set and the dimensions
-        std::string check_set(const std::string& set, int& dim);
+        std::string get_set_path(const std::string& set, int& dim);
 
         bool check_blob_size(const std::string& blob, const int dimensions,
                              const long n_desc);

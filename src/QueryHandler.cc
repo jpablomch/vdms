@@ -311,8 +311,6 @@ void QueryHandler::process_query(protobufs::queryMessage& proto_query,
                 images_log.push_back(cmd_result["image_added"].asString());
             }
 
-            construct_results.push_back(cmd_result);
-
             if (ret_code != 0) {
                 error(cmd_result, root[j]);
                 return;
