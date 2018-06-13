@@ -35,6 +35,7 @@
 #include "QueryHandler.h"
 
 #include "ImageCommand.h"
+#include "VideoCommand.h"
 #include "ExceptionsCommand.h"
 
 #include "PMGDQuery.h"
@@ -64,6 +65,12 @@ void QueryHandler::init()
     _rs_cmds["AddImage"]   = new AddImage();
     _rs_cmds["UpdateImage"]   = new UpdateImage();
     _rs_cmds["FindImage"]  = new FindImage();
+
+    _rs_cmds["AddVideo"]   = new AddVideo();
+    _rs_cmds["UpdateVideo"]   = new UpdateVideo();
+    _rs_cmds["FindVideo"]  = new FindVideo();
+    _rs_cmds["FindFrame"]  = new FindFrame();
+    _rs_cmds["AddFrame"]  = new AddFrame();
 
     // Load the string containing the schema (api_schema/APISchema.h)
     Json::Reader reader;
@@ -233,6 +240,14 @@ void QueryHandler::cleanup_query(const std::vector<std::string>& images)
     for (auto& img_path : images) {
         VCL::Image img(img_path);
         img.delete_image();
+    }
+}
+
+void QueryHandler::cleanup_videos_query(const std::vector<std::string>& videos)
+{
+    for (auto& video_path : videos) {
+        VCL::Video video(video_path);
+        //video.delete_video();
     }
 }
 
