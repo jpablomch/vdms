@@ -51,14 +51,15 @@ void VideoCommand::enqueue_operations(VCL::Video& video, const Json::Value& ops)
     for (auto& op : ops) {
         const std::string& type = get_value<std::string>(op, "type");
         if (type == "threshold") {
-         //   video.threshold(get_value<int>(op, "value"));
+            video.threshold(get_value<int>(op, "value"));
         }
         else if (type == "interval") {
-         //   video.threshold(get_value<int>(op, "value"));
+        //   video.interval(get_value<int>(op, "from"),
+         //                  get_value<int>(op, "to"));
         }
         else if (type == "resize") {
-            // video.resize(get_value<int>(op, "height"),
-            //               get_value<int>(op, "width") );
+             video.resize(get_value<int>(op, "height"),
+                           get_value<int>(op, "width") );
         }
         else if (type == "crop") {
             // video.crop(VCL::Rectangle (
@@ -77,7 +78,7 @@ void VideoCommand::enqueue_operations(VCL::Video& video, const Json::Value& ops)
 
 AddVideo::AddVideo() : VideoCommand("AddVideo")
 {
-     std::cout<<"VDMS AddVideo";
+
     _storage_video = VDMSConfig::instance()
                   ->get_string_value("video_path", DEFAULT_VIDEO_PATH);
     // _storage_png = VDMSConfig::instance()
@@ -103,16 +104,16 @@ int AddVideo::construct_protobuf(PMGDQuery& query,
         enqueue_operations(video, cmd["operations"]);
     }
 
-    std::string video_root; // = _storage_tdb;
-    VCL::VideoFormat vcl_format ;// = VCL::TDB;
+    std::string video_root = _storage_video;
+    VCL::VideoFormat vcl_format  = VCL::MP4;
 
     if (cmd.isMember("format")) {
         std::string format = get_value<std::string>(cmd, "format");
 
-        // if (format == "png") {
-        //     vcl_format = VCL::PNG;
-        //     video_root = _storage_png;
-        // }
+        if (format == "mp4") {
+            vcl_format = VCL::MP4;
+            video_root = _storage_video;
+        }
         // else if (format == "tdb") {
         //     vcl_format = VCL::TDB;
         //     video_root = _storage_tdb;
@@ -128,7 +129,7 @@ int AddVideo::construct_protobuf(PMGDQuery& query,
         // }
     }
 
-    std::string file_name ;// = video.create_unique(video_root, vcl_format);
+    std::string file_name  ; //= video.create_unique(video_root, vcl_format, true);
 
     // Modifiyng the existing properties that the user gives
     // is a good option to make the AddNode more simple.
@@ -154,7 +155,7 @@ int AddVideo::construct_protobuf(PMGDQuery& query,
 //=========AddFrame definitions ===========
 AddFrame::AddFrame() : VideoCommand("AddFrame")
 {
-  std::cout<<"Frame";
+
 }
 
 int AddFrame::construct_protobuf(PMGDQuery& query,
@@ -227,7 +228,7 @@ int AddFrame::construct_protobuf(PMGDQuery& query,
 
 UpdateVideo::UpdateVideo() : VideoCommand("UpdateVideo")
 {
-    std::cout<<"Update";
+
 }
 
 int UpdateVideo::construct_protobuf(PMGDQuery& query,
@@ -275,7 +276,7 @@ Json::Value UpdateVideo::construct_responses(
 
 FindVideo::FindVideo() : VideoCommand("FindVideo")
 {
-    std::cout<<"FineVideo";
+
 }
 
 int FindVideo::construct_protobuf(
@@ -419,7 +420,7 @@ Json::Value FindVideo::construct_responses(
 //========= FindFrame definitions =========
 FindFrame::FindFrame() : VideoCommand("FindVideo")
 {
-    std::cout<<"FindFrame";
+
 }
 
 int FindFrame::construct_protobuf(

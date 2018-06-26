@@ -20,7 +20,10 @@ testenv.Append(
 
 testenv.MergeFlags(GetOption('cflags'))
 
-test_sources = ['main.cc', 'pmgd_queries.cc', 'json_queries.cc']
+test_sources = ['main.cc',
+                #'pmgd_queries.cc',
+                'json_queries.cc'
+                ]
 
 query_tests = testenv.Program(
                 'query_tests',
