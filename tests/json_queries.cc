@@ -45,30 +45,101 @@ using namespace VDMS;
 using namespace PMGD;
 using namespace std;
 
+// std::string singleAddVideo(" \
+//         { \
+//             \"AddVideo\": { \
+//                 \"operations\": [{ \
+//                     \"width\": 512, \
+//                     \"type\": \"resize\", \
+//                     \"height\": 512  \
+//                 }], \
+//                 \"properties\": { \
+//                     \"name\": \"video_0\", \
+//                     \"doctor\": \"Dr. Strange Love\" \
+//                 }, \
+//                 \"format\": \"avi\" \
+//             } \
+//         } \
+//     ");
+
+// std::string singleAddVideo(" \
+//         { \
+//             \"AddVideo\": { \
+//                          } \
+//         } \
+//     ");
+
+// TEST(AddVideo, simpleAdd)
+// {
+//     std::string addVideo;
+//     addVideo += "[" + singleAddVideo + "]";
+
+//     VDMSConfig::init("config-tests.json");
+//     PMGDQueryHandler::init();
+//     QueryHandler::init();
+
+//     QueryHandler qh_base;
+//     QueryHandlerTester query_handler(qh_base);
+
+//     VDMS::protobufs::queryMessage proto_query;
+//     proto_query.set_json(addVideo);
+
+//     std::string video;
+//     std::ifstream file("test_videos/Megamind.avi",
+//                     std::ios::in | std::ios::binary | std::ios::ate);
+
+//     video.resize(file.tellg());
+
+//     file.seekg(0, std::ios::beg);
+//     if( !file.read(&video[ 0 ], video.size()))
+//         std::cout << "error" << std::endl;
+
+//     proto_query.add_blobs(video);
+
+//     VDMS::protobufs::queryMessage response;
+//     query_handler.pq(proto_query, response);
+
+//     Json::Reader json_reader;
+//     Json::Value json_response;
+
+//     // std::cout <<"VVVVV\n"<< response.json() << std::endl;
+//     //json_reader.parse(response.json(), json_response);
+
+//    // EXPECT_EQ(json_response[0]["AddVideo"]["status"].asString(), "0");
+//     VDMSConfig::destroy();
+//     PMGDQueryHandler::destroy();
+// }
 
 
-std::string singleAddVideo(" \
-        { \
-            \"AddVideo\": { \
-                \"operations\": [{ \
-                    \"width\": 512, \
-                    \"type\": \"resize\", \
-                    \"height\": 512  \
-                }], \
-                \"properties\": { \
-                    \"name\": \"video_0\", \
-                    \"doctor\": \"Dr. Strange Love\" \
-                }, \
-                \"format\": \"png\" \
-            } \
-        } \
-    ");
-
-TEST(AddVideo, simpleAdd)
+/*******************************/
+TEST(AddVideo, simpleAddFile)
 {
-    std::string addVideo;
-    addVideo += "[" + singleAddVideo + "]";
 
+    Json::StyledWriter writer;
+
+    std::ifstream ifile;
+    int fsize;
+    char * inBuf;
+    ifile.open("VideoAdd.json", std::ifstream::in);
+    ifile.seekg(0, std::ios::end);
+    fsize = (int)ifile.tellg();
+    ifile.seekg(0, std::ios::beg);
+    inBuf = new char[fsize];
+    ifile.read(inBuf, fsize);
+    std::string json_query = std::string(inBuf);
+    ifile.close();
+    delete[] inBuf;
+
+
+    std::string string_query("[");
+    string_query +=json_query;
+    string_query += "]";
+
+    Json::Reader reader;
+    Json::Value root;
+    Json::Value parsed;
+
+    std::cout << json_query << std::endl;
     VDMSConfig::init("config-tests.json");
     PMGDQueryHandler::init();
     QueryHandler::init();
@@ -77,7 +148,7 @@ TEST(AddVideo, simpleAdd)
     QueryHandlerTester query_handler(qh_base);
 
     VDMS::protobufs::queryMessage proto_query;
-    proto_query.set_json(addVideo);
+    proto_query.set_json(string_query);
 
     std::string video;
     std::ifstream file("test_videos/Megamind.avi",
@@ -88,22 +159,36 @@ TEST(AddVideo, simpleAdd)
     file.seekg(0, std::ios::beg);
     if( !file.read(&video[ 0 ], video.size()))
         std::cout << "error" << std::endl;
-
     proto_query.add_blobs(video);
 
     VDMS::protobufs::queryMessage response;
-    query_handler.pq(proto_query, response);
 
-    Json::Reader json_reader;
-    Json::Value json_response;
+    query_handler.pq(proto_query, response );
 
-     std::cout <<"VVVVV\n"<< response.json() << std::endl;
-    //json_reader.parse(response.json(), json_response);
+    reader.parse(response.json().c_str(), parsed);
+    std::cout << writer.write(parsed) << std::endl;
 
-   // EXPECT_EQ(json_response[0]["AddVideo"]["status"].asString(), "0");
+    // Verify results returned.
+    // for (int j = 0; j < parsed.size(); j++) {
+    //     const Json::Value& query = parsed[j];
+    //     ASSERT_EQ(query.getMemberNames().size(), 1);
+    //     std::string cmd = query.getMemberNames()[0];
+
+    //     if (cmd == "AddEntity")
+    //         EXPECT_EQ(query[cmd]["count"].asInt(), 1);
+    //     if (cmd == "FindEntity") {
+    //         EXPECT_EQ(query[cmd]["returned"].asInt(), 2);
+    //         EXPECT_EQ(query["FindEntity"]["entities"][0]["fv"].asString(),
+    //           "Missing property");
+    //     }
+    // }
+
     VDMSConfig::destroy();
     PMGDQueryHandler::destroy();
 }
+
+
+/*****************************/
 
 std::string singleAddImage(" \
         { \
@@ -122,10 +207,86 @@ std::string singleAddImage(" \
         } \
     ");
 
-TEST(AddImage, simpleAdd)
+// TEST(AddImage, simpleAdd)
+// {
+//     std::string addImg;
+//     addImg += "[" + singleAddImage + "]";
+
+//     VDMSConfig::init("config-tests.json");
+//     PMGDQueryHandler::init();
+//     QueryHandler::init();
+
+//     QueryHandler qh_base;
+//     QueryHandlerTester query_handler(qh_base);
+
+//     VDMS::protobufs::queryMessage proto_query;
+//     proto_query.set_json(addImg);
+
+//     std::string image;
+//     std::ifstream file("test_images/brain.png",
+//                     std::ios::in | std::ios::binary | std::ios::ate);
+
+//     image.resize(file.tellg());
+
+//     file.seekg(0, std::ios::beg);
+//     if( !file.read(&image[ 0 ], image.size()))
+//         std::cout << "error" << std::endl;
+
+//     proto_query.add_blobs(image);
+
+//     VDMS::protobufs::queryMessage response;
+//     query_handler.pq(proto_query, response);
+
+//     Json::Reader json_reader;
+//     Json::Value json_response;
+
+//     // std::cout << response.json() << std::endl;
+//     json_reader.parse(response.json(), json_response);
+
+//     EXPECT_EQ(json_response[0]["AddImage"]["status"].asString(), "0");
+//     VDMSConfig::destroy();
+//     PMGDQueryHandler::destroy();
+// }
+/**********************************/
+
+TEST(AddVideo, simpleAddx10)
 {
-    std::string addImg;
-    addImg += "[" + singleAddImage + "]";
+    int total_videos = 10;
+
+
+
+
+     std::ifstream ifile;
+    int fsize;
+    char * inBuf;
+    ifile.open("VideoAdd.json", std::ifstream::in);
+    ifile.seekg(0, std::ios::end);
+    fsize = (int)ifile.tellg();
+    ifile.seekg(0, std::ios::beg);
+    inBuf = new char[fsize];
+    ifile.read(inBuf, fsize);
+    std::string json_query  = std::string(inBuf);
+    ifile.close();
+
+    delete[] inBuf;
+    std::string string_query("[");
+
+    for (int i = 0; i < total_videos; ++i) {
+
+        string_query +=json_query;
+        if (i != total_videos - 1)
+            string_query += ",";
+}
+    string_query += "]";
+
+
+    std::cout<<string_query<<std::endl;
+    Json::StyledWriter writer;
+
+
+    Json::Reader reader;
+    Json::Value root;
+    Json::Value parsed;
 
     VDMSConfig::init("config-tests.json");
     PMGDQueryHandler::init();
@@ -135,22 +296,30 @@ TEST(AddImage, simpleAdd)
     QueryHandlerTester query_handler(qh_base);
 
     VDMS::protobufs::queryMessage proto_query;
-    proto_query.set_json(addImg);
+    proto_query.set_json(string_query);
+    VDMS::protobufs::queryMessage response;
 
-    std::string image;
-    std::ifstream file("test_images/brain.png",
+
+
+    std::string video;
+    std::ifstream file("test_videos/Megamind.avi",
                     std::ios::in | std::ios::binary | std::ios::ate);
 
-    image.resize(file.tellg());
+    video.resize(file.tellg());
 
     file.seekg(0, std::ios::beg);
-    if( !file.read(&image[ 0 ], image.size()))
+    if( !file.read(&video[ 0 ], video.size()))
         std::cout << "error" << std::endl;
 
-    proto_query.add_blobs(image);
+    for (int i = 0; i < total_videos; ++i) {
+       proto_query.add_blobs(video);
+    }
 
-    VDMS::protobufs::queryMessage response;
-    query_handler.pq(proto_query, response);
+    query_handler.pq(proto_query, response );
+
+    reader.parse(response.json().c_str(), parsed);
+    std::cout << writer.write(parsed) << std::endl;
+
 
     Json::Reader json_reader;
     Json::Value json_response;
@@ -158,10 +327,13 @@ TEST(AddImage, simpleAdd)
     // std::cout << response.json() << std::endl;
     json_reader.parse(response.json(), json_response);
 
-    EXPECT_EQ(json_response[0]["AddImage"]["status"].asString(), "0");
+    for (int i = 0; i < total_videos; ++i) {
+        EXPECT_EQ(json_response[i]["AddVideo"]["status"].asString(), "0");
+    }
     VDMSConfig::destroy();
     PMGDQueryHandler::destroy();
 }
+
 
 // TEST(UpdateEntity, simpleAddUpdate)
 // {
@@ -220,57 +392,57 @@ TEST(AddImage, simpleAdd)
 //     PMGDQueryHandler::destroy();
 // }
 
-TEST(AddImage, simpleAddx10)
-{
-    int total_images = 10;
-    std::string string_query("[");
+// TEST(AddImage, simpleAddx10)
+// {
+//     int total_images = 10;
+//     std::string string_query("[");
 
-    for (int i = 0; i < total_images; ++i) {
-        string_query += singleAddImage;
-        if (i != total_images - 1)
-            string_query += ",";
-    }
-    string_query += "]";
+//     for (int i = 0; i < total_images; ++i) {
+//         string_query += singleAddImage;
+//         if (i != total_images - 1)
+//             string_query += ",";
+//     }
+//     string_query += "]";
 
-    VDMSConfig::init("config-add10-tests.json");
-    PMGDQueryHandler::init();
-    QueryHandler::init();
+//     VDMSConfig::init("config-add10-tests.json");
+//     PMGDQueryHandler::init();
+//     QueryHandler::init();
 
-    QueryHandler qh_base;
-    QueryHandlerTester query_handler(qh_base);
+//     QueryHandler qh_base;
+//     QueryHandlerTester query_handler(qh_base);
 
-    VDMS::protobufs::queryMessage proto_query;
-    proto_query.set_json(string_query);
+//     VDMS::protobufs::queryMessage proto_query;
+//     proto_query.set_json(string_query);
 
-    std::string image;
-    std::ifstream file("test_images/brain.png",
-                    std::ios::in | std::ios::binary | std::ios::ate);
+//     std::string image;
+//     std::ifstream file("test_images/brain.png",
+//                     std::ios::in | std::ios::binary | std::ios::ate);
 
-    image.resize(file.tellg());
+//     image.resize(file.tellg());
 
-    file.seekg(0, std::ios::beg);
-    if( !file.read(&image[ 0 ], image.size()))
-        std::cout << "error" << std::endl;
+//     file.seekg(0, std::ios::beg);
+//     if( !file.read(&image[ 0 ], image.size()))
+//         std::cout << "error" << std::endl;
 
-    for (int i = 0; i < total_images; ++i) {
-        proto_query.add_blobs(image);
-    }
+//     for (int i = 0; i < total_images; ++i) {
+//         proto_query.add_blobs(image);
+//     }
 
-    VDMS::protobufs::queryMessage response;
-    query_handler.pq(proto_query, response);
+//     VDMS::protobufs::queryMessage response;
+//     query_handler.pq(proto_query, response);
 
-    Json::Reader json_reader;
-    Json::Value json_response;
+//     Json::Reader json_reader;
+//     Json::Value json_response;
 
-    // std::cout << response.json() << std::endl;
-    json_reader.parse(response.json(), json_response);
+//     // std::cout << response.json() << std::endl;
+//     json_reader.parse(response.json(), json_response);
 
-    for (int i = 0; i < total_images; ++i) {
-        EXPECT_EQ(json_response[i]["AddImage"]["status"].asString(), "0");
-    }
-    VDMSConfig::destroy();
-    PMGDQueryHandler::destroy();
-}
+//     for (int i = 0; i < total_images; ++i) {
+//         EXPECT_EQ(json_response[i]["AddImage"]["status"].asString(), "0");
+//     }
+//     VDMSConfig::destroy();
+//     PMGDQueryHandler::destroy();
+// }
 
 // TEST(QueryHandler, AddAndFind)
 // {

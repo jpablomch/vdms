@@ -105,31 +105,32 @@ int AddVideo::construct_protobuf(PMGDQuery& query,
     }
 
     std::string video_root = _storage_video;
-    VCL::VideoFormat vcl_format  = VCL::MP4;
+    VCL::Format vcl_format  = VCL::Format::AVI;
 
     if (cmd.isMember("format")) {
         std::string format = get_value<std::string>(cmd, "format");
 
         if (format == "mp4") {
-            vcl_format = VCL::MP4;
+            vcl_format = VCL::Format::MP4;
             video_root = _storage_video;
         }
-        // else if (format == "tdb") {
-        //     vcl_format = VCL::TDB;
-        //     video_root = _storage_tdb;
-        // }
-        // else if (format == "jpg") {
-        //     vcl_format = VCL::JPG;
-        //     video_root = _storage_jpg;
-        // }
-        // else {
-        //     error["info"] = format + ": format not implemented";
-        //     error["status"] = RSCommand::Error;
-        //     return -1;
-        // }
+        else if (format == "avi") {
+            vcl_format = VCL::Format::AVI;
+            video_root = _storage_video;
+        }
+        else if (format == "mpeg") {
+            vcl_format = VCL::Format::MPEG;
+            video_root = _storage_video;
+        }
+
+        else {
+            error["info"] = format + ": format not implemented";
+            error["status"] = RSCommand::Error;
+            return -1;
+        }
     }
 
-    std::string file_name  ; //= video.create_unique(video_root, vcl_format, true);
+    std::string file_name  = video.create_unique(video_root, vcl_format);
 
     // Modifiyng the existing properties that the user gives
     // is a good option to make the AddNode more simple.
@@ -138,7 +139,7 @@ int AddVideo::construct_protobuf(PMGDQuery& query,
     Json::Value props = get_value<Json::Value>(cmd, "properties");
     props[VDMS_VIDEO_PATH_PROP] = file_name;
 
-    // Add Image node
+    // Add Video node
     query.AddNode(node_ref, VDMS_VIDEO_TAG, props, Json::Value());
 
     video.store(file_name, vcl_format);
@@ -176,31 +177,33 @@ int AddFrame::construct_protobuf(PMGDQuery& query,
     }
 
     std::string video_root; // = _storage_tdb;
-   VCL::VideoFormat vcl_format ;// = VCL::TDB;
+    VCL::Format vcl_format ;// = VCL::TDB;
 
     if (cmd.isMember("format")) {
         std::string format = get_value<std::string>(cmd, "format");
 
-        // if (format == "png") {
-        //     vcl_format = VCL::PNG;
-        //     video_root = _storage_png;
-        // }
-        // else if (format == "tdb") {
-        //     vcl_format = VCL::TDB;
-        //     video_root = _storage_tdb;
-        // }
-        // else if (format == "jpg") {
-        //     vcl_format = VCL::JPG;
-        //     video_root = _storage_jpg;
-        // }
-        // else {
-        //     error["info"] = format + ": format not implemented";
-        //     error["status"] = RSCommand::Error;
-        //     return -1;
-        // }
+        if (format == "mp4") {
+            vcl_format = VCL::Format::MP4;
+            video_root = _storage_video;
+        }
+        else if (format == "avi") {
+            vcl_format = VCL::Format::AVI;
+            video_root = _storage_video;
+        }
+        else if (format == "mpeg") {
+            vcl_format = VCL::Format::MPEG;
+            video_root = _storage_video;
+        }
+
+        else {
+            error["info"] = format + ": format not implemented";
+            error["status"] = RSCommand::Error;
+            return -1;
+        }
+
     }
 
-    std::string file_name ;// = video.create_unique(video_root, vcl_format);
+    std::string file_name = video.create_unique(video_root, vcl_format);
 
     // Modifiyng the existing properties that the user gives
     // is a good option to make the AddNode more simple.
@@ -360,21 +363,20 @@ Json::Value FindVideo::construct_responses(
                 enqueue_operations(video, cmd["operations"]);
             }
 
-            // We will return the image in the format the user
-            // request, or on its format in disk, except for the case
-            // of .tdb, where we will encode as png.
-           // VCL::VideoFormat format = video.get_image_format() != VCL::TDB ?
-            //                          video.get_image_format() : VCL::PNG;
-            VCL::VideoFormat format;
+
+            VCL::Format format;
             if (cmd.isMember("format")) {
                 std::string requested_format =
                             get_value<std::string>(cmd, "format");
 
-                if (requested_format == "png") {
-                   // format = VCL::PNG;
+                if (requested_format == "mp4") {
+                    format = VCL::Format::MP4;
                 }
-                else if (requested_format == "jpg") {
-                   // format = VCL::JPG;
+                else if (requested_format == "avi") {
+                    format = VCL::Format::AVI;
+                }
+                else if (requested_format == "mpeg") {
+                    format = VCL::Format::MPEG;
                 }
                 else {
                     Json::Value return_error;

@@ -127,6 +127,7 @@ namespace VDMS {
                                Json::Value& error);
 
         bool need_blob(const Json::Value& cmd) { return true; }
+        std::string _storage_video;
     };
  class FindFrame: public VideoCommand
     {
