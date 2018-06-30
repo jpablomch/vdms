@@ -164,10 +164,12 @@
         "x":      { "$ref": "#/definitions/nonNegativeInt" },
         "y":      { "$ref": "#/definitions/nonNegativeInt" },
         "height": { "$ref": "#/definitions/positiveInt" },
-        "width":  { "$ref": "#/definitions/positiveInt" }
+        "width":  { "$ref": "#/definitions/positiveInt" },
+        "start":     { "$ref": "#/definitions/nonNegativeInt" },
+        "stop":      { "$ref": "#/definitions/nonNegativeInt" }
       },
       "required": ["type", "x", "y", "height", "width"],
-      "additionalProperties": false
+      "additionalProperties": true
     },
 
     // Top-Level Commands (needed for the Schema)

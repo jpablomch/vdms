@@ -62,11 +62,15 @@ void VideoCommand::enqueue_operations(VCL::Video& video, const Json::Value& ops)
                            get_value<int>(op, "width") );
         }
         else if (type == "crop") {
-            // video.crop(VCL::Rectangle (
-            //             get_value<int>(op, "x"),
-            //             get_value<int>(op, "y"),
-            //             get_value<int>(op, "width"),
-            //             get_value<int>(op, "height") ));
+            video.crop(VCL::Rectangle (
+                        get_value<int>(op, "x"),
+                        get_value<int>(op, "y"),
+                        get_value<int>(op, "width"),
+                        get_value<int>(op, "height") ),
+                        get_value<int>(op, "start"),
+                        get_value<int>(op, "stop")
+
+            );
         }
         else {
             throw ExceptionCommand(ImageError, "Operation not defined");
