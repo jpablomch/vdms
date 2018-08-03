@@ -1,41 +1,15 @@
-## Installation
+Currently the VCL works on Ubuntu Linux (v16.04) with OpenCV (v3.3) and TileDB
+(v1.3.1), but it should work on any recent version of Ubuntu. It's also been
+tested with g++ v5.4.0. If you're having issues, check your Ubuntu and g++
+versions first.
 
-### Dependencies
+## Basic Dependencies
+    sudo apt-get install git wget
+
+If your system does not have [scons](http://scons.org/) installed,
+run the following:
 
     sudo apt-get install scons
-    sudo apt-get install libjsoncpp-dev
-    sudo apt-get install automake libtool curl make g++ unzip libgtest-dev
-    sudo apt-get install cmake wget zlib1g-dev libbz2-dev libssl-dev liblz4-dev
-    sudo apt-get install libtiff5-dev libjasper-dev libgtk-3-dev
-    sudo apt-get install flex libjsoncpp-dev javacc libbison-dev openjdk-8-jdk
-
-    // Also, install one of the following for MPI
-    sudo apt-get install libopenmpi-dev
-    sudo apt-get install mpich
-
-### External Libraries
-* protobuf (default install location is /usr/local)
-  * git clone https://github.com/google/protobuf.git
-  * cd protobuf/
-  * ./autogen.sh
-  * ./configure
-  * make && make check
-  * sudo make install
-  * sudo ldconfg
-
-* valijson
-  * git clone https://github.com/tristanpenman/valijson.git
-  * cd valijson
-  * cp -r include/* /usr/local/include (may need to run as sudo)
-  * This is a headers-only library, no compilation/installation necessary
-
-* Persistent Memory Graph Database (PMGD)
-  * Download version 1.0.0 from: https://github.com/IntelLabs/pmgd/releases
-  * Follow installation instructions
-
-* Visual Compute Library
-  * Download version 0.1.0 from: https://github.com/IntelLabs/vcl/releases
-  * Follow installation instructions
 
 [Google Test](https://github.com/google/googletest) is used for the unit tests included in the test folder. To install:
 
@@ -67,7 +41,7 @@ Download [OpenCV 3.3.1](https://github.com/opencv/opencv/archive/3.3.1.zip)
     sudo make install
 
 ## [TileDB](https://tiledb.io/)
-TileDB v1.3.1. It has not been tested with the
+Currently the VCL works with TileDB v1.3.1. It has not been tested with the
 Docker image, though please let us know if you try that and it works! The
 directions below will help you install TileDB v1.3.1 from source. You can also
 follow the directions listed
@@ -131,44 +105,14 @@ Download [Faiss 1.2.1](https://github.com/facebookresearch/faiss/archive/v1.2.1.
     # system-wide
     # Or follow instructions [here](https://github.com/facebookresearch/faiss/blob/v1.2.1/INSTALL.md)
 
-### Requirement for Python Client
+## Compilation
+    git clone https://github.com/IntelLabs/vcl # or download a release
+    cd vcl
+    scons
 
-    sudo apt-get install python-pip
-    pip install protobuf (may need to run as sudo)
+Make sure libvcl is on your LD_LIBRARY_PATH
 
-    Add VDMS Python module to PYPATH:
-    export PYTHONPATH="${PYTHONPATH}:<path_to_vdms>/client/python/vdms"
-    # Example:
-    export PYTHONPATH="${PYTHONPATH}:/opt/intel/vdms/client/python/vdms"
+To run the unit tests:
 
-### Compilation
-
-    git clone https://github.com/intellabs/vdms
-    // Or download a release.
-
-    cd vdms
-    scons [FLAGS]
-
-Flag | Explanation
------------- | -------------
---no-server | Compiles client libraries (C++/Python) only. (will not compile neither server not tests)
---timing    | Compiles server with chronos for internal timing.
--jX         | Compiles in parallel, using X cores
-INTEL_PATH=path  | Path to the root folder containing pmgd and vcl. Default is "./" which is pmgd and vcl inside vdms folder. Example: scons INTEL_PATH=/opt/intel/
-
-### Running The VDMS Server
-
-The config-vdms.json file contains the configuration of the server.
-Some of the parameters include the TCP port that will be use for incoming
-connections, maximun number of simultaneous clients, and paths to the
-folders where data/metadata will be stored.
-
-**Note:** The folders must already exists in the filesystem.
-
-We provide a script (run_server.sh) that will create some default directories,
-corresponding the default values in the config-vdms.json.
-
-To run the server using the default directories and port, simply run:
-
-    sh run_server.sh
-
+    cd test
+    sh run_tests.sh

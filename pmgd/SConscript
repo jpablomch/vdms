@@ -1,0 +1,10 @@
+Import('env')
+
+pmgd_env = env.Clone()
+
+pmgd = pmgd_env.Command (
+           ['lib/libpmgd.so', 'lib/libpmgd-util.so'], # TARGET
+            '', # $SOURCE
+            'cd pmgd && make -j'
+            )
+

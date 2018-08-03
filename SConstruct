@@ -12,19 +12,20 @@ def buildServer(env):
   env.Append(
     CPPPATH= ['src', 'utils/include',
               '/usr/include/jsoncpp/',
-              os.path.join(env['INTEL_PATH'], 'pmgd/include'),
-              os.path.join(env['INTEL_PATH'], 'pmgd/util'),
-              os.path.join(env['INTEL_PATH'], 'vcl/include'),
-              os.path.join(env['INTEL_PATH'], 'vcl/src'),
+              'vcl/include',
+              'vcl/src',
+              'pmgd/include',
+              'pmgd/util',
              ],
     LIBS = [ 'pmgd', 'pmgd-util',
              'jsoncpp', 'protobuf', 'tbb',
              'vdms-utils', 'vcl', 'pthread',
            ],
-    LIBPATH = ['/usr/local/lib/', 'utils/',
-               os.path.join(env['INTEL_PATH'], 'utils/'),
-               os.path.join(env['INTEL_PATH'], 'vcl/'),
-               os.path.join(env['INTEL_PATH'], 'pmgd/lib/')
+    LIBPATH = ['/usr/local/lib/',
+               'utils/',
+               'vcl/',
+               'utils/',
+               'pmgd/lib/'
                ]
   )
 
@@ -63,8 +64,11 @@ env.MergeFlags(GetOption('cflags'))
 
 SConscript(os.path.join('utils', 'SConscript'), exports=['env'])
 SConscript(os.path.join('client/cpp','SConscript'), exports=['env'])
+SConscript(os.path.join('vcl', 'SConscript'), exports=['env'])
+SConscript(os.path.join('pmgd', 'SConscript'), exports=['env'])
+
 
 if GetOption('no-server'):
   buildServer(env)
   # Build tests only if server is built
-  SConscript(os.path.join('tests', 'SConscript'), exports=['env'])
+  # SConscript(os.path.join('tests', 'SConscript'), exports=['env'])
