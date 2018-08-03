@@ -665,10 +665,22 @@ int FindDescriptor::construct_protobuf(
             std::string blob_return;
 
             Json::Value ids_array;
-            for (auto& id : ids) {
-                if (id >= 0) {
-                    ids_array.append(Json::Int64(id));
+
+            for (int i = 0; i < ids.size(); ++i) {
+                if (ids[i] >= 0) {
+                    ids_array.append(Json::Int64(ids[i]));
                 }
+                else {
+                    ids.erase(ids.begin() + i, ids.end());
+                    distances.erase(distances.begin() + i, distances.end());
+                    break;
+                }
+            }
+
+            // This are needed to construct the response.
+            if (!results.isMember("list")) {
+                results["list"].append(VDMS_DESC_LABEL_PROP);
+                results["list"].append(VDMS_DESC_ID_PROP);
             }
 
             Json::Value node_constraints = constraints;
@@ -737,11 +749,11 @@ Json::Value FindDescriptor::construct_responses(
 
     const int k_neighbors = get_value<int>(cmd, "k_neighbors", 0);
 
-    // There are 3 cases here:
+    // There are 3 cases here: TODO FIX THIS EXPLANATION
     // (1) Link present (response has 2 elements):
     //   * Nodes corresponding to descriptors
     //   * Node corresponding to the set
-    // (2) Link not present, results[list] or _ref present:
+    // (2) Link not present, k_neighbors not present:
     //   * Node corresponding to the set
     //   * Nodes corresponding descriptors
     // (3) No link, results[list], nor _ref present
@@ -820,22 +832,24 @@ Json::Value FindDescriptor::construct_responses(
         bool compute_distance = false;
         if (results.isMember("list")) {
 
-            for (int i = 0; i <  results["list"].size(); ++i) {
-            if (results["list"][i].asString() == "_distance") {
+            for (int i = 0; i < results["list"].size(); ++i) {
+                if (results["list"][i].asString() == "_distance") {
                     compute_distance = true;
-
-                    // Test whether there is any cached result.
-                    assert (cache.isMember("cache_obj_id"));
-
-                    long cache_obj_id = cache["cache_obj_id"].asInt64();
-
-                    // Load Cache
-                    IDDistancePair& pair = _cache_map[cache_obj_id];
-                    ids       = &pair.first;
-                    distances = &pair.second;
+                    break;
                 }
+
             }
         }
+
+        // Test whether there is any cached result.
+        assert (cache.isMember("cache_obj_id"));
+
+        long cache_obj_id = cache["cache_obj_id"].asInt64();
+
+        // Get from Cache
+        IDDistancePair& pair = _cache_map[cache_obj_id];
+        ids       = &pair.first;
+        distances = &pair.second;
 
         findDesc = json_responses[1];
 
@@ -852,6 +866,11 @@ Json::Value FindDescriptor::construct_responses(
 
         convert_properties(entities);
 
+        std::cout << json_responses << std::endl;
+        std::cout << (*ids).size() << std::endl;
+
+        // This should never happen as ids will be have all (and only)
+        // the valid elements at this point
         assert(entities.size() == (*ids).size());
 
         for (int i = 0; i < (*ids).size(); ++i) {
@@ -884,7 +903,6 @@ Json::Value FindDescriptor::construct_responses(
                     VCL::DescriptorSet* set =
                             _dm->get_descriptors_handler(set_path);
 
-                    // TODO GET BLOB FROM VCL
                     std::string* desc_blob = query_res.add_blobs();
                     desc_blob->resize(sizeof(float) * dim);
 
