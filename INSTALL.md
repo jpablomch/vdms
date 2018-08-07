@@ -8,6 +8,8 @@
     sudo apt-get install cmake wget zlib1g-dev libbz2-dev libssl-dev liblz4-dev
     sudo apt-get install libtiff5-dev libjasper-dev libgtk-3-dev
     sudo apt-get install flex libjsoncpp-dev javacc libbison-dev openjdk-8-jdk
+    sudo apt-get install tbb-examples
+    sudo apt-get install zlib1g-dev libssl-dev liblz4-dev libbz2-dev
 
     // Also, install one of the following for MPI
     sudo apt-get install libopenmpi-dev
@@ -15,8 +17,9 @@
 
 ### External Libraries
 * protobuf (default install location is /usr/local)
-  * git clone https://github.com/google/protobuf.git
-  * cd protobuf/
+  * wget https://github.com/google/protobuf/releases/download/v3.3.0/protobuf-cpp-3.3.0.zip
+  * unzip protobuf-cpp-3.3.0.zip
+  * cd protobuf-3.3.0/
   * ./autogen.sh
   * ./configure
   * make && make check
@@ -28,14 +31,6 @@
   * cd valijson
   * cp -r include/* /usr/local/include (may need to run as sudo)
   * This is a headers-only library, no compilation/installation necessary
-
-* Persistent Memory Graph Database (PMGD)
-  * Download version 1.0.0 from: https://github.com/IntelLabs/pmgd/releases
-  * Follow installation instructions
-
-* Visual Compute Library
-  * Download version 0.1.0 from: https://github.com/IntelLabs/vcl/releases
-  * Follow installation instructions
 
 [Google Test](https://github.com/google/googletest) is used for the unit tests included in the test folder. To install:
 
@@ -49,15 +44,10 @@ you need to do the following steps to get it to work correctly:
     sudo make
     sudo cp *.a /usr/lib
 
-[Doxygen](http://www.stack.nl/~dimitri/doxygen/) is used to create the API documentation. To install:
-
-    sudo apt-get install doxygen
-
 ## [OpenCV](https://opencv.org/)
-The VCL may be fine with newer versions of OpenCV, but below are instructions for installing OpenCV v3.3
+VDMS may be fine with newer versions of OpenCV, but below are instructions for installing OpenCV v3.3.1
 
-Download [OpenCV 3.3.1](https://github.com/opencv/opencv/archive/3.3.1.zip)
-
+    wget https://github.com/opencv/opencv/archive/3.3.1.zip
     unzip 3.3.1.zip
     cd 3.3.1
     mkdir build
@@ -72,25 +62,6 @@ Docker image, though please let us know if you try that and it works! The
 directions below will help you install TileDB v1.3.1 from source. You can also
 follow the directions listed
 [here](https://docs.tiledb.io/en/latest/installation.html).
-
-### Dependencies
-    sudo apt-get install zlib1g-dev libssl-dev liblz4-dev libbz2-dev
-
-### Install Blosc
-    git clone https://github.com/Blosc/c-blosc.git`
-    cd c-blosc/
-    mkdir build
-    cd build/
-    cmake -DCMAKE_INSTALL_PREFIX='/usr' ..
-    cmake --build .
-    ctest
-    sudo cmake --build . --target install
-
-### Install ZStandard
-    wget https://github.com/facebook/zstd/archive/v1.1.0.tar.gz
-    tar xf v1.1.0.tar.gz
-    cd zstd-1.1.0
-    sudo make install PREFIX='/usr'
 
 ### Build TileDB
 
