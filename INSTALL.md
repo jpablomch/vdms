@@ -1,21 +1,21 @@
-## Installation
+# Installation
 
-### Dependencies
+## Dependencies
 
     sudo apt-get install scons
-    sudo apt-get install libjsoncpp-dev
-    sudo apt-get install automake libtool curl make g++ unzip libgtest-dev
-    sudo apt-get install cmake wget zlib1g-dev libbz2-dev libssl-dev liblz4-dev
+    sudo apt-get install automake libtool make g++ cmake
+    sudo apt-get install curl wget unzip
+    sudo apt-get install zlib1g-dev libbz2-dev libssl-dev liblz4-dev
     sudo apt-get install libtiff5-dev libjasper-dev libgtk-3-dev
     sudo apt-get install flex libjsoncpp-dev javacc libbison-dev openjdk-8-jdk
-    sudo apt-get install tbb-examples
-    sudo apt-get install zlib1g-dev libssl-dev liblz4-dev libbz2-dev
+    sudo apt-get install tbb-examples libgtest-dev
 
     // Also, install one of the following for MPI
     sudo apt-get install libopenmpi-dev
     sudo apt-get install mpich
 
-### External Libraries
+## External Libraries
+
 * protobuf (default install location is /usr/local)
   * wget https://github.com/google/protobuf/releases/download/v3.3.0/protobuf-cpp-3.3.0.zip
   * unzip protobuf-cpp-3.3.0.zip
@@ -32,19 +32,8 @@
   * cp -r include/* /usr/local/include (may need to run as sudo)
   * This is a headers-only library, no compilation/installation necessary
 
-[Google Test](https://github.com/google/googletest) is used for the unit tests included in the test folder. To install:
-
-    sudo apt-get install cmake libgtest-dev
-
-Unfortunately this doesn't actually install gtest;
-you need to do the following steps to get it to work correctly:
-
-    cd /usr/src/gtest/
-    sudo cmake CMakeLists.txt
-    sudo make
-    sudo cp *.a /usr/lib
-
 ## [OpenCV](https://opencv.org/)
+
 VDMS may be fine with newer versions of OpenCV, but below are instructions for installing OpenCV v3.3.1
 
     wget https://github.com/opencv/opencv/archive/3.3.1.zip
@@ -57,13 +46,14 @@ VDMS may be fine with newer versions of OpenCV, but below are instructions for i
     sudo make install
 
 ## [TileDB](https://tiledb.io/)
+
 TileDB v1.3.1. It has not been tested with the
 Docker image, though please let us know if you try that and it works! The
 directions below will help you install TileDB v1.3.1 from source. You can also
 follow the directions listed
 [here](https://docs.tiledb.io/en/latest/installation.html).
 
-### Build TileDB
+Building TileDB:
 
     git clone https://github.com/TileDB-Inc/TileDB
     cd TileDB
@@ -80,11 +70,11 @@ on your machine, you will need to remove the existing header file
 since the newer version of TileDB installs to /usr/local/include/tiledb/.
 
 ## [Faiss](https://github.com/facebookresearch/faiss)
+
 Facebook Faiss library for similarity search, used as alternitive engines
 on VCL::DescriptorSet.
 
-Download [Faiss 1.2.1](https://github.com/facebookresearch/faiss/archive/v1.2.1.tar.gz)
-
+    wget https://github.com/facebookresearch/faiss/archive/v1.2.1.tar.gz
     tar -xzvf v1.2.1.tar.gz
     cd faiss-1.2.1
     mkdir build
@@ -102,7 +92,21 @@ Download [Faiss 1.2.1](https://github.com/facebookresearch/faiss/archive/v1.2.1.
     # system-wide
     # Or follow instructions [here](https://github.com/facebookresearch/faiss/blob/v1.2.1/INSTALL.md)
 
-### Requirement for Python Client
+## [Google Test](https://github.com/google/googletest) 
+
+It is used for the unit tests included in the test folder. To install:
+
+    sudo apt-get install libgtest-dev # If you haven't already
+
+Unfortunately this doesn't actually install gtest;
+you need to do the following steps to get it to work correctly:
+
+    cd /usr/src/gtest/
+    sudo cmake CMakeLists.txt
+    sudo make
+    sudo cp *.a /usr/lib
+
+## Requirement for Python Client
 
     sudo apt-get install python-pip
     pip install protobuf (may need to run as sudo)
@@ -112,7 +116,7 @@ Download [Faiss 1.2.1](https://github.com/facebookresearch/faiss/archive/v1.2.1.
     # Example:
     export PYTHONPATH="${PYTHONPATH}:/opt/intel/vdms/client/python/vdms"
 
-### Compilation
+## Compilation
 
     git clone https://github.com/intellabs/vdms
     // Or download a release.
@@ -127,7 +131,7 @@ Flag | Explanation
 -jX         | Compiles in parallel, using X cores
 INTEL_PATH=path  | Path to the root folder containing pmgd and vcl. Default is "./" which is pmgd and vcl inside vdms folder. Example: scons INTEL_PATH=/opt/intel/
 
-### Running The VDMS Server
+## Running The VDMS Server
 
 The config-vdms.json file contains the configuration of the server.
 Some of the parameters include the TCP port that will be use for incoming
