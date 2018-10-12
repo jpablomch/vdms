@@ -38,13 +38,7 @@
 
 ### Requirement for Python Client
 
-    sudo apt-get install python-pip
-    pip install protobuf (may need to run as sudo)
-
-    Add VDMS Python module to PYPATH:
-    export PYTHONPATH="${PYTHONPATH}:<path_to_vdms>/client/python/vdms"
-    # Example:
-    export PYTHONPATH="${PYTHONPATH}:/opt/intel/vdms/client/python/vdms"
+    pip install vdms
 
 ### Compilation
 
@@ -76,4 +70,3 @@ corresponding the default values in the config-vdms.json.
 To run the server using the default directories and port, simply run:
 
     sh run_server.sh
-
