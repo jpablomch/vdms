@@ -21,9 +21,14 @@ RUN apt-get install -y libgtk2.0-dev pkg-config libavcodec-dev libavformat-dev l
 RUN apt-get install -y libtbb2 libtbb-dev libjpeg-dev libpng-dev libtiff-dev libjasper-dev libdc1394-22-dev
 RUN pip install scons numpy
 RUN apt-get remove -y libprotobuf-dev protobuf-compiler
-RUN cd / && git clone https://github.com/google/protobuf.git
-RUN cd protobuf && git checkout v3.5.0 && ./autogen.sh && ./configure --prefix=/usr/local && make -j $(cat /proc/cpuinfo | wc -l) && make install && ldconfig
-RUN rm -rf /protobuf
+#RUN cd / && git clone https://github.com/google/protobuf.git
+#RUN cd protobuf && git checkout v3.3.0 && ./autogen.sh && ./configure --prefix=/usr/local && make -j $(cat /proc/cpuinfo | wc -l) && make install && ldconfig
+#RUN cd / && git clone -b v3.5.1 https://github.com/google/protobuf.git --depth 1 && cd protobuf && ./autogen.sh && ./configure --prefix=/usr/local && make -j$cores && make install && ldconfig
+RUN cd / && curl -OL https://github.com/google/protobuf/releases/download/v3.5.1/protoc-3.5.1-linux-x86_64.zip
+RUN unzip protoc-3.5.1-linux-x86_64.zip -d protoc3 && mv protoc3/bin/* /usr/local/bin/
+RUN mv protoc3/include/* /usr/local/include/
+RUN rm -rf /protoc3
+#RUN rm -rf /protobuf
 
 # Blosc
 RUN cd / && git clone https://github.com/Blosc/c-blosc.git
